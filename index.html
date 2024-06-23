@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatEpixy</title>
+    <link rel="icon" type="image/x-icon" href="https://imgs.search.brave.com/WDA6PFIDrff5Cu25vv2ZHmFs5CNIZ00GpM25jWcz5k8/rs:fit:860:0:0/g:ce/aHR0cHM6Ly91eHdp/bmcuY29tL3dwLWNv/bnRlbnQvdGhlbWVz/L3V4d2luZy9kb3du/bG9hZC9icmFuZHMt/YW5kLXNvY2lhbC1t/ZWRpYS9jaGF0Z3B0/LWljb24ucG5n">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-image: url('https://cdn.dribbble.com/users/1373613/screenshots/5385718/siri-____.gif');
+            background-position: center;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: #333;
+        }
+        #chat-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            width: 70%;
+            height: 85%;
+            background: rgba(255, 255, 255, 0.2); /* Transparent background */
+            backdrop-filter: blur(10px); /* Blur effect for background */
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+            position: relative;
+            padding: 10px;
+        }
+        #messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            border-bottom: 1px solid #ccc;
+        }
+        .message {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 20px;
+            max-width: 70%;
+            word-wrap: break-word;
+        }
+        .user-message {
+            background-color: #06FB2B;
+            align-self: flex-start; /* User message aligns left */
+            text-align: left; /* Text aligns left */
+            color: white; /* Text color for user messages */
+        }
+        .bot-message {
+            background-color: #3390FF; /* Blue color for bot messages */
+            color: white; /* Text color for bot messages */
+            align-self: flex-start; /* Bot message aligns left */
+            text-align: left; /* Text aligns left */
+        }
+        #input-container {
+            display: flex;
+            padding: 10px;
+            background: #f0f0f0;
+            border-top: 1px solid #ccc;
+        }
+        #user-input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-right: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div id="chat-container">
+        <div id="messages"></div>
+        <div id="input-container">
+            <input type="text" id="user-input" placeholder="Type your message here..." autofocus onkeypress="checkEnter(event)">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <script>
+        function checkEnter(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        async function sendMessage() {
+            const userInput = document.getElementById('user-input').value.trim();
+            if (!userInput) return;
+
+            // Display user message
+            const messages = document.getElementById('messages');
+            const userMessage = document.createElement('div');
+            userMessage.className = 'message user-message';
+            userMessage.textContent = userInput;
+            messages.appendChild(userMessage);
+            document.getElementById('user-input').value = '';
+            messages.scrollTop = messages.scrollHeight;
+
+            // Simulate API call (replace with actual fetch)
+            const response = await fetch('/chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ input: userInput })
+            });
+
+            const data = await response.json();
+
+            // Display bot response
+            const botMessage = document.createElement('div');
+            botMessage.className = 'message bot-message';
+            botMessage.textContent = data.response;
+            messages.appendChild(botMessage);
+            messages.scrollTop = messages.scrollHeight;
+
+            // Request audio URL from Flask backend
+            const audioResponse = await fetch('/speak', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ text: data.response })
+            });
+
+            const audioData = await audioResponse.json();
+            const audioUrl = audioData.audio_url;
+
+            // Play the audio on the client side
+            const audio = new Audio(audioUrl);
+            audio.play();
+        }
+    </script>
+</body>
+</html>
